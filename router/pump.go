@@ -328,12 +328,12 @@ func (cp *containerPump) send(msg *Message) {
 		}
 		select {
 		case logstream <- msg:
-		case <-time.After(time.Second * 1):
+		case <-time.After(time.Second * 5):
 			debug("pump.send(): send timeout, closing NOOO")
 			// normal call to remove() triggered by
 			// route.Closer() may not be able to grab
 			// lock under heavy load, so we delete here
-			//defer delete(cp.logstreams, logstream)
+			defer delete(cp.logstreams, logstream)
 		}
 	}
 }
@@ -347,5 +347,5 @@ func (cp *containerPump) add(logstream chan *Message, route *Route) {
 func (cp *containerPump) remove(logstream chan *Message) {
 	cp.Lock()
 	defer cp.Unlock()
-	//delete(cp.logstreams, logstream)
+	delete(cp.logstreams, logstream)
 }
