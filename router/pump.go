@@ -347,5 +347,5 @@ func (cp *containerPump) add(logstream chan *Message, route *Route) {
 func (cp *containerPump) remove(logstream chan *Message) {
 	cp.Lock()
 	defer cp.Unlock()
-	delete(cp.logstreams, logstream)
+	//delete(cp.logstreams, logstream)
 }
