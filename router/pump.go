@@ -196,6 +196,7 @@ func (p *LogsPump) pumpLogs(event *docker.APIEvents, backlog bool) {
 			}
 
 			sinceTime = time.Now()
+			debug("sinceTime:", sinceTime)
 
 			container, err := p.client.InspectContainer(id)
 			if err != nil {
@@ -227,7 +228,7 @@ func (p *LogsPump) update(event *docker.APIEvents) {
 			select {
 			case r <- &update{event, pump}:
 			case <-time.After(time.Second * 1):
-				debug("pump.update(): route timeout, dropping")
+				debug("pump.update(): route timeout, dropping", p.routes, "r:", r)
 				defer delete(p.routes, r)
 			}
 		}
@@ -247,6 +248,7 @@ func (p *LogsPump) Route(route *Route, logstream chan *Message) {
 		if route.MatchContainer(
 			normalID(pump.container.ID),
 			normalName(pump.container.Name)) {
+			debug("pump.Route(): ", logstream, "route: ", route)
 
 			pump.add(logstream, route)
 			defer pump.remove(logstream)
@@ -329,7 +331,7 @@ func (cp *containerPump) send(msg *Message) {
 		select {
 		case logstream <- msg:
 		case <-time.After(time.Second * 1):
-			debug("pump.send(): send timeout, closing NOOO")
+			debug("pump.send(): send timeout, closing")
 			// normal call to remove() triggered by
 			// route.Closer() may not be able to grab
 			// lock under heavy load, so we delete here
@@ -342,10 +344,13 @@ func (cp *containerPump) add(logstream chan *Message, route *Route) {
 	cp.Lock()
 	defer cp.Unlock()
 	cp.logstreams[logstream] = route
+	debug("pump.add():", route)
+
 }
 
 func (cp *containerPump) remove(logstream chan *Message) {
 	cp.Lock()
 	defer cp.Unlock()
+	debug("pump.remove():", logstream)
 	delete(cp.logstreams, logstream)
 }
